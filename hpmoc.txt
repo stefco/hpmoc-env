@@ -8,3 +8,4 @@ pytest
 pytest-cov
 pytest-html
 flit
+h5py
