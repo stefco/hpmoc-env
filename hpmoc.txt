@@ -1,0 +1,10 @@
+pip
+numpy
+matplotlib
+astropy
+jupyter
+ipython
+pytest
+pytest-cov
+pytest-html
+flit
