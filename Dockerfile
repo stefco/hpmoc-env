@@ -1,7 +1,6 @@
 FROM continuumio/miniconda3:latest
 COPY . /root/provision
 RUN mkdir -p ~/.local/share ~/.cache ~/.jupyter \
-    && conda activate \
     && conda config --set channel_priority strict \
     && echo "Contents of ~/provision/hpmoc.txt to be installed:" \
     && cat ~/provision/hpmoc.txt \
