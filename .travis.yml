@@ -1,0 +1,43 @@
+language: python
+env:
+  global:
+    - HABA_IMAGES_DIR=/rigel/geco/users/llama/images
+    - HABA_DOMAIN=habanero.rcs.columbia.edu
+    - HABA_XFER=habaxfer.rcs.columbia.edu
+    - HABA_USER=stc2117
+    - DOCKER_REPO=stefco/hpmoc-env
+    - DEST=hpmoc-env
+services:
+  - docker
+install:
+  - if [ -z "$TRAVIS_TAG" ]; then echo "Not a tag, exiting" && exit 0; fi
+  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+  - docker build -t $DOCKER_REPO:latest .
+  - docker push $DOCKER_REPO:latest
+  - docker tag $DOCKER_REPO:latest $DOCKER_REPO:"$TRAVIS_TAG"
+  - docker push $DOCKER_REPO:"$TRAVIS_TAG"
+  - mkdir singularity
+  - >
+    docker run
+      -v /var/run/docker.sock:/var/run/docker.sock
+      -v /root/singularity:/output
+      --privileged
+      -t
+      --rm
+      --name singularitybuild
+      quay.io/singularity/docker2singularity
+      --mount "/root/.local/share/llama /root/dev"
+      $DOCKER_REPO:latest
+  - ssh $HABA_USER@$HABA_DOMAIN "mkdir -p $HABA_IMAGES_DIR"
+  - >
+    scp
+      singularity/*sif
+      $HABA_USER@$HABA_XFER:$HABA_IMAGES_DIR/$DEST-$TRAVIS_TAG.sif
+  - >
+    ssh $HABA_USER@$HABA_DOMAIN
+      "ln -sf images/$DEST-$TRAVIS_TAG.sif $HABA_IMAGES_DIR/../$DEST.sif"
+  - >
+    ssh $HABA_USER@$HABA_DOMAIN
+      "singularity run $HABA_IMAGES_DIR/../$DEST.sif python -c 'import hpmoc'"
+notifications:
+  slack: cu-geco:ycdtdb9euz2tkA2wgzOigYZ6

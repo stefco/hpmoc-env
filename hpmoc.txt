@@ -9,3 +9,4 @@ pytest-cov
 pytest-html
 flit
 h5py
+PyYAML
